@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pediatric Potassium Replacement Calculator</title>
+  <style>
+    :root{
+      --bg: #ffffff;
+      --accent: #0b66d0;
+      --accent-600: #065bb3;
+      --muted: #6b7280;
+      --danger: #b91c1c;
+      --card: #f8fafc;
+      --radius: 10px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background:var(--bg);
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    .container{
+      max-width:900px;
+      margin:28px auto;
+      padding:20px;
+    }
+    header{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin-bottom:18px;
+    }
+    .logo{
+      width:56px;
+      height:56px;
+      background:linear-gradient(135deg,var(--accent),var(--accent-600));
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      color:white;
+      border-radius:12px;
+      font-weight:700;
+      font-size:18px;
+      box-shadow: 0 6px 18px rgba(11,102,208,0.12);
+    }
+    h1{
+      font-size:20px;
+      margin:0;
+    }
+    p.lead{
+      margin:6px 0 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* Card */
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.05);
+    }
+
+    form.grid{
+      display:grid;
+      gap:12px;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width:720px){
+      form.grid{ grid-template-columns: 1fr; }
+    }
+
+    label{
+      display:block;
+      font-size:13px;
+      margin-bottom:6px;
+      color:#0f172a;
+    }
+    .field{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    input[type="number"], select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #e6eef9;
+      background:white;
+      box-sizing:border-box;
+      font-size:15px;
+      outline:none;
+    }
+    input[type="number"]:focus, select:focus{
+      border-color:var(--accent-600);
+      box-shadow: 0 4px 12px rgba(11,102,208,0.08);
+    }
+    .small{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    /* Results */
+    .results{
+      margin-top:14px;
+      display:grid;
+      gap:10px;
+    }
+    .result-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      background:white;
+      border-radius:10px;
+      padding:10px 12px;
+      border:1px solid #eef2ff;
+    }
+    .result-row h3{
+      margin:0;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .result-row .value{
+      font-weight:700;
+      font-size:16px;
+      color:#0b1220;
+    }
+
+    .warning{
+      margin-top:8px;
+      padding:10px;
+      border-radius:8px;
+      background:#fff4f4;
+      border:1px solid rgba(185,28,28,0.08);
+      color:var(--danger);
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-weight:600;
+    }
+
+    .controls{
+      margin-top:14px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    button{
+      padding:10px 14px;
+      border-radius:9px;
+      border:0;
+      cursor:pointer;
+      font-weight:600;
+      color:white;
+      background:var(--accent);
+      box-shadow: 0 6px 18px rgba(11,102,208,0.12);
+    }
+    button.secondary{
+      background:#e6eef9;
+      color:var(--accent-600);
+      box-shadow:none;
+      border:1px solid rgba(11,102,208,0.06);
+    }
+    .muted-note{
+      margin-top:12px;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    footer{
+      margin-top:18px;
+      font-size:13px;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    /* Inline validation */
+    .invalid{
+      border-color:#fca5a5 !important;
+      box-shadow:none !important;
+    }
+    .error-msg{
+      font-size:12px;
+      color:#b91c1c;
+      margin-top:6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">K+</div>
+      <div>
+        <h1>Pediatric Potassium Replacement Calculator</h1>
+        <p class="lead">Age-adjusted deficit → mmol K+ → converted to KCl (mg). Real-time, mobile-ready.</p>
+      </div>
+    </header>
+
+    <div class="card" role="region" aria-label="Potassium replacement calculator">
+      <form id="calcForm" class="grid" onsubmit="return false;">
+        <div>
+          <label for="ageValue">Age</label>
+          <div class="field">
+            <input id="ageValue" type="number" inputmode="decimal" min="0" max="36500" step="1" placeholder="e.g. 15" aria-describedby="ageHelp" />
+            <select id="ageUnit" aria-label="Age unit">
+              <option value="days">days</option>
+              <option value="months">months</option>
+              <option value="years" selected>years</option>
+            </select>
+          </div>
+          <div id="ageHelp" class="small">Enter numeric age and select unit. Max 100 years.</div>
+          <div id="ageError" class="error-msg" style="display:none;"></div>
+        </div>
+
+        <div>
+          <label for="serumK">Serum Potassium (mmol/L)</label>
+          <input id="serumK" type="number" inputmode="decimal" step="0.1" min="0" max="10" placeholder="e.g. 3.0" />
+          <div id="kError" class="error-msg" style="display:none;"></div>
+        </div>
+
+        <div>
+          <label for="weight">Weight (kg)</label>
+          <input id="weight" type="number" inputmode="decimal" step="0.01" min="0.01" max="200" placeholder="e.g. 3.50" />
+          <div id="wError" class="error-msg" style="display:none;"></div>
+        </div>
+
+        <div>
+          <label>&nbsp;</label>
+          <div class="small">Values validated in real time. No negative or unrealistic inputs allowed.</div>
+        </div>
+      </form>
+
+      <div class="results" id="results">
+        <div class="result-row">
+          <h3>Lower limit used</h3>
+          <div class="value" id="lowerLimit">—</div>
+        </div>
+
+        <div class="result-row">
+          <h3>Potassium deficit (mmol)</h3>
+          <div class="value" id="deficit">—</div>
+        </div>
+
+        <div class="result-row">
+          <h3>Interpretation</h3>
+          <div class="value" id="interpretation">—</div>
+        </div>
+
+        <div class="result-row">
+          <h3>KCl dose (mg)</h3>
+          <div class="value" id="kclDose">—</div>
+        </div>
+
+        <div id="criticalWarning" style="display:none;" class="warning" role="alert">
+          <span>⚠️</span>
+          <div>
+            <div style="font-weight:700;">CRITICAL: Severe hypokalemia</div>
+            <div style="font-size:13px; color:var(--muted); font-weight:600;">Consider IV replacement and cardiac monitoring</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="resetBtn" class="secondary" type="button">Reset</button>
+        <button id="copyBtn" type="button">Copy results</button>
+      </div>
+
+      <div class="muted-note">
+        Note: 75 mg KCl = 1 mmol K+ (used for conversion).
+      </div>
+    </div>
+
+    <footer>
+      Based on pediatric potassium replacement guidelines
+    </footer>
+  </div>
+
+  <script>
+    // Elements
+    const ageValueEl = document.getElementById('ageValue');
+    const ageUnitEl = document.getElementById('ageUnit');
+    const serumKEl = document.getElementById('serumK');
+    const weightEl = document.getElementById('weight');
+
+    const lowerLimitEl = document.getElementById('lowerLimit');
+    const deficitEl = document.getElementById('deficit');
+    const interpretationEl = document.getElementById('interpretation');
+    const kclDoseEl = document.getElementById('kclDose');
+    const criticalWarningEl = document.getElementById('criticalWarning');
+
+    const resetBtn = document.getElementById('resetBtn');
+    const copyBtn = document.getElementById('copyBtn');
+
+    const ageErrorEl = document.getElementById('ageError');
+    const kErrorEl = document.getElementById('kError');
+    const wErrorEl = document.getElementById('wError');
+
+    // Utility: clamp and validate
+    function isFiniteNumber(v){ return typeof v === 'number' && isFinite(v); }
+
+    // Calculate lower limit based on age
+    function determineLowerLimit(ageValue, ageUnit){
+      // Normalize to days and years
+      const days = (ageUnit === 'days') ? ageValue
+                 : (ageUnit === 'months') ? (ageValue * 30)
+                 : (ageValue * 365);
+      const years = days / 365;
+
+      // Age rules:
+      // Infants: 0-30 days => 3.5
+      // Children: >30 days up to 12 years => 3.4
+      // Adolescents: >12 years => 3.5
+      if (days <= 30) {
+        return {lower: 3.5, label: '3.5 mmol/L (infant)'};
+      }
+      if (years > 12) {
+        return {lower: 3.5, label: '3.5 mmol/L (adolescent)'};
+      }
+      // default to children
+      return {lower: 3.4, label: '3.4 mmol/L (child)'};
+    }
+
+    // Main compute function
+    function compute(){
+      // Clear validation states
+      [ageValueEl, serumKEl, weightEl].forEach(el => el.classList.remove('invalid'));
+      ageErrorEl.style.display = 'none';
+      kErrorEl.style.display = 'none';
+      wErrorEl.style.display = 'none';
+
+      const ageRaw = ageValueEl.value;
+      const unit = ageUnitEl.value;
+      const serumKRaw = serumKEl.value;
+      const weightRaw = weightEl.value;
+
+      // Parse numbers
+      const ageNum = ageRaw === '' ? NaN : Number(ageRaw);
+      const serumK = serumKRaw === '' ? NaN : Number(serumKRaw);
+      const weight = weightRaw === '' ? NaN : Number(weightRaw);
+
+      // Validate age
+      if (ageRaw === '' || !isFiniteNumber(ageNum) || ageNum < 0) {
+        ageValueEl.classList.add('invalid');
+        ageErrorEl.textContent = 'Enter a valid non-negative age.';
+        ageErrorEl.style.display = 'block';
+      } else if ((unit === 'days' && ageNum > 36500) || (unit === 'months' && ageNum > 1200) || (unit === 'years' && ageNum > 100)){
+        ageValueEl.classList.add('invalid');
+        ageErrorEl.textContent = 'Please use realistic age (≤100 years).';
+        ageErrorEl.style.display = 'block';
+      }
+
+      // Validate serum K
+      if (serumKRaw === '' || !isFiniteNumber(serumK) || serumK < 0) {
+        serumKEl.classList.add('invalid');
+        kErrorEl.textContent = 'Enter a valid serum potassium (≥0).';
+        kErrorEl.style.display = 'block';
+      } else if (serumK > 10) {
+        serumKEl.classList.add('invalid');
+        kErrorEl.textContent = 'Serum K seems too high (>10 mmol/L).';
+        kErrorEl.style.display = 'block';
+      }
+
+      // Validate weight
+      if (weightRaw === '' || !isFiniteNumber(weight) || weight <= 0) {
+        weightEl.classList.add('invalid');
+        wErrorEl.textContent = 'Enter a valid weight (>0 kg).';
+        wErrorEl.style.display = 'block';
+      } else if (weight > 200) {
+        weightEl.classList.add('invalid');
+        wErrorEl.textContent = 'Weight seems too high (>200 kg).';
+        wErrorEl.style.display = 'block';
+      }
+
+      // If any invalid, clear outputs and exit
+      if (ageValueEl.classList.contains('invalid') || serumKEl.classList.contains('invalid') || weightEl.classList.contains('invalid')) {
+        lowerLimitEl.textContent = '—';
+        deficitEl.textContent = '—';
+        interpretationEl.textContent = '—';
+        kclDoseEl.textContent = '—';
+        criticalWarningEl.style.display = 'none';
+        return;
+      }
+
+      // Determine lower limit
+      const ll = determineLowerLimit(ageNum, unit);
+      const lowerLimit = ll.lower;
+
+      // Potassium deficit calculation:
+      // Deficit (mmol) = (Lower Limit - Measured K) × Weight × 0.3
+      // If measured K >= lower limit => deficit = 0
+      let deficitRaw = 0;
+      if (serumK < lowerLimit) {
+        deficitRaw = (lowerLimit - serumK) * weight * 0.3;
+        if (deficitRaw < 0) deficitRaw = 0;
+      } else {
+        deficitRaw = 0;
+      }
+
+      // Display formatting:
+      // - Deficit displayed rounded to 1 decimal
+      const deficitDisplay = Math.round(deficitRaw * 10) / 10; // 1 decimal
+      // - KCl dose in mg = (use the unrounded raw deficit) * 75, display whole number
+      const kclMgRaw = deficitRaw * 75;
+      const kclMgDisplay = Math.round(kclMgRaw);
+
+      // Interpretation
+      // <10 mmol: Mild
+      // 10-20 mmol: Moderate
+      // >20 mmol: Significant - consider IV therapy
+      let interp = '—';
+      if (deficitRaw === 0) {
+        interp = 'No deficit — no replacement needed';
+      } else if (deficitRaw < 10) {
+        interp = 'Mild deficit';
+      } else if (deficitRaw <= 20) {
+        interp = 'Moderate deficit';
+      } else { // >20
+        interp = 'Significant deficit - consider IV therapy';
+      }
+
+      // Critical warning: serum K < 2.5
+      if (serumK < 2.5) {
+        criticalWarningEl.style.display = 'flex';
+      } else {
+        criticalWarningEl.style.display = 'none';
+      }
+
+      // Fill results
+      lowerLimitEl.textContent = ll.label;
+      deficitEl.textContent = deficitDisplay.toFixed(1) + ' mmol';
+      interpretationEl.textContent = interp;
+      kclDoseEl.textContent = kclMgDisplay.toLocaleString() + ' mg';
+    }
+
+    // Attach event listeners for real-time calculation
+    [ageValueEl, ageUnitEl, serumKEl, weightEl].forEach(el => {
+      el.addEventListener('input', compute);
+      el.addEventListener('change', compute);
+    });
+
+    // Reset button
+    resetBtn.addEventListener('click', () => {
+      ageValueEl.value = '';
+      ageUnitEl.value = 'years';
+      serumKEl.value = '';
+      weightEl.value = '';
+      compute();
+      // clear validation
+      [ageValueEl, serumKEl, weightEl].forEach(el => el.classList.remove('invalid'));
+      ageErrorEl.style.display = 'none';
+      kErrorEl.style.display = 'none';
+      wErrorEl.style.display = 'none';
+    });
+
+    // Copy results button (copies textual results)
+    copyBtn.addEventListener('click', () => {
+      const text = [
+        `Lower limit: ${lowerLimitEl.textContent}`,
+        `Potassium deficit: ${deficitEl.textContent}`,
+        `Interpretation: ${interpretationEl.textContent}`,
+        `KCl dose: ${kclDoseEl.textContent}`,
+        criticalWarningEl.style.display === 'flex' ? '⚠️ CRITICAL: Severe hypokalemia - consider IV replacement and cardiac monitoring' : ''
+      ].filter(Boolean).join('\n');
+      navigator.clipboard?.writeText(text).then(() => {
+        copyBtn.textContent = 'Copied ✓';
+        setTimeout(()=> copyBtn.textContent = 'Copy results', 1400);
+      }).catch(()=> {
+        copyBtn.textContent = 'Copy';
+      });
+    });
+
+    // Initial compute (empty)
+    compute();
+
+    // Example test cases (for developer/user verification in the console)
+    // You can open browser console and call runExample(1|2|3)
+    function runExample(n){
+      if (n === 1) {
+        ageUnitEl.value = 'days';
+        ageValueEl.value = 15;
+        weightEl.value = 3.5;
+        serumKEl.value = 3.0;
+      } else if (n === 2) {
+        ageUnitEl.value = 'years';
+        ageValueEl.value = 5;
+        weightEl.value = 18;
+        serumKEl.value = 2.8;
+      } else if (n === 3) {
+        ageUnitEl.value = 'years';
+        ageValueEl.value = 14;
+        weightEl.value = 50;
+        serumKEl.value = 2.2;
+      }
+      compute();
+    }
+    window.runExample = runExample;
+  </script>
+</body>
+</html>
